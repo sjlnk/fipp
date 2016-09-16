@@ -192,3 +192,9 @@
   ([x] (pprint x {}))
   ([x options]
    (edn/pprint x (merge {:symbols default-symbols} options))))
+
+(defn pformat
+  ([x] (pformat x {}))
+  ([x options]
+   (edn/pformat x (merge {:symbols default-symbols} options)))
+  )

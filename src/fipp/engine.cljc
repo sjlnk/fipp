@@ -228,17 +228,18 @@
              (throw (ex-info "Unexpected node op" {:node node}))))
          )))))
 
-
-(defn pprint-document [document options]
+(defn format-document-to-str [document options]
   (let [options (merge {:width 70} options)]
     (->> (serialize document)
          (eduction
            annotate-rights
            (annotate-begins options)
            (format-nodes options))
-         (run! print)))
-  (println))
+         clojure.string/join)))
 
+(defn pprint-document [document options]
+  (print (format-document-to-str document options))
+  (println))
 
 (comment
 

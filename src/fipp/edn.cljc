@@ -3,7 +3,7 @@
   See fipp.clojure for pretty printing Clojure code."
   (:require [fipp.ednize :refer [edn record->tagged]]
             [fipp.visit :refer [visit visit*]]
-            [fipp.engine :refer (pprint-document)]))
+            [fipp.engine :refer (pprint-document format-document-to-str)]))
 
 (defn pretty-coll [{:keys [print-level print-length] :as printer}
                    open xs sep close f]
@@ -17,6 +17,13 @@
         ellipsis (when (and print-length (seq (drop print-length xs)))
                    [:span sep "..."])]
     [:group open [:align ys ellipsis] close]))
+
+(defn array-to-str [x]
+  (let [data (vec x)
+        t (type x)]
+    (assert (.isArray t))
+    (format "%s (%s)]" (.getName t) (clojure.string/join " " data)))
+  )
 
 (defrecord EdnPrinter [symbols print-meta print-length print-level]
 
@@ -32,6 +39,42 @@
 
   (visit-boolean [this x]
     [:text (str x)])
+
+  (visit-boolean-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-byte-array [this x]
+    (let [data (map #(format "%02X" (int %)) x)]
+      [:text (format "[B (%s)]" (clojure.string/join " " data))])
+    )
+
+  (visit-char-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-short-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-int-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-long-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-float-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-double-array [this x]
+    [:text (array-to-str x)]
+    )
+
+  (visit-array [this x]
+    [:text (array-to-str x)])
 
   (visit-string [this x]
     [:text (pr-str x)])
@@ -88,8 +131,8 @@
 
   )
 
-(defn pprint
-  ([x] (pprint x {}))
+(defn pformat
+  ([x] (pformat x {}))
   ([x options]
    (let [defaults {:symbols {}
                    :print-length *print-length*
@@ -97,4 +140,9 @@
                    :print-meta *print-meta*}
          printer (map->EdnPrinter (merge defaults options))]
      (binding [*print-meta* false]
-       (pprint-document (visit printer x) options)))))
+       (format-document-to-str (visit printer x) options)))))
+
+(defn pprint
+  ([x] (print (pformat x {})) (println))
+  ([x options]
+   (print (pformat x options)) (println)))
